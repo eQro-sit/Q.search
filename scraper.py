@@ -2,12 +2,11 @@ import os
 import requests
 import json
 
-# GitHub Secrets থেকে সিক্রেট এপিআই কী পড়া
+# GitHub Secrets থেকে API কী গ্রহণ
 api_key = os.environ.get("SERPER_API_KEY")
-
 url = "https://google.serper.dev/search"
 
-# আমরা যে তথ্য খুঁজতে চাই (Search Query)
+# সার্চ কোয়েরি
 payload = json.dumps({
   "q": "hobby shop bangladesh phone number"
 })
