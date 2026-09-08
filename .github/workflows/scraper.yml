@@ -2,18 +2,27 @@ name: Scraper Workflow
 
 on:
   schedule:
-    - cron: '0 0 * * *' # প্রতিদিন স্বয়ংক্রিয়ভাবে চলবে
-  workflow_dispatch: # হাতে চেপে যেকোনো সময় চালু করার জন্য
+    - cron: '0 0 * * *'
+  workflow_dispatch:
 
 jobs:
   run-scraper:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+
+      - name: Install dependencies
+        run: |
+          pip install requests
 
       - name: Run Scraper
         env:
           SERPER_API_KEY: ${{ secrets.SERPER_API_KEY }}
         run: |
-          echo "Automated search is running using Serper API..."
+          python scraper.py
