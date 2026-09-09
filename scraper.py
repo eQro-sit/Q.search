@@ -24,8 +24,9 @@ if os.path.exists(csv_filename):
 
 print(f"🚀 স্ক্র্যাপিং শুরু... আগে থেকে {len(existing_links)} টি ডাটা সেভ করা আছে।\n")
 
-# 📦 ১. ওয়েবহুকে পাঠানোর জন্য একটি ফাঁকা লিস্ট তৈরি
+# 📦 ১. ওয়েবহুকে পাঠানোর জন্য ব্যাচ লিস্ট ও ব্যাচ সাইজ নির্ধারণ
 all_webhook_data = []
+BATCH_SIZE = 50
 
 with open(csv_filename, mode="a", newline="", encoding="utf-8") as file:
   writer = csv.writer(file)
@@ -77,21 +78,33 @@ with open(csv_filename, mode="a", newline="", encoding="utf-8") as file:
                 "link": link
             }
             
-            # 📦 ২. রিকোয়েস্ট না পাঠিয়ে লিস্টে ডাটা যুক্ত (append) করা
+            # 📦 ২. লিস্টে ডাটা যুক্ত করা
             all_webhook_data.append(webhook_payload)
+
+            # ৫০টি ডাটা পূর্ণ হলে ওয়েবহুকে পাঠানো হবে
+            if len(all_webhook_data) == BATCH_SIZE:
+              print(f"📤 ৫০টি ডাটার একটি ব্যাচ ওয়েবহুকে পাঠানো হচ্ছে...")
+              try:
+                webhook_response = requests.post(webhook_url, json=all_webhook_data)
+                print(f"✅ ব্যাচ সফলভাবে পাঠানো হয়েছে! (Status: {webhook_response.status_code})")
+              except Exception as webhook_err:
+                print(f"⚠️ Webhook-এ পাঠাতে সমস্যা: {webhook_err}")
+              
+              # পরবর্তী ব্যাচের জন্য লিস্টটি খালি করা
+              all_webhook_data = []
 
         except Exception as e:
           print(f"⚠️ {keyword} (Page {page_num}) সার্চে সমস্যা: {e}")
 
 print(f"\n✅ নতুন ডাটা সফলভাবে {csv_filename} ফাইলে যুক্ত হয়েছে!")
 
-# 🚀 ৩. লুপ শেষ হওয়ার পর একসাথে পুরো লিস্টটি ওয়েবহুকে পাঠানো
+# 🚀 ৩. লুপ শেষ হওয়ার পর অবশিষ্ট (৫০টির কম) ডাটা থাকলে তা ওয়েবহুকে পাঠানো
 if all_webhook_data:
-    print(f"\n📤 মোট {len(all_webhook_data)} টি নতুন ডাটা ওয়েবহুকে পাঠানো হচ্ছে...")
+    print(f"\n📤 অবশিষ্ট {len(all_webhook_data)} টি নতুন ডাটা ওয়েবহুকে পাঠানো হচ্ছে...")
     try:
         webhook_response = requests.post(webhook_url, json=all_webhook_data)
         print(f"✅ Webhook-এ সফলভাবে পাঠানো হয়েছে! (Status: {webhook_response.status_code})")
     except Exception as webhook_err:
         print(f"⚠️ Webhook-এ পাঠাতে সমস্যা: {webhook_err}")
 else:
-    print("\nℹ️ ওয়েবহুকে পাঠানোর মতো কোনো নতুন ডাটা পাওয়া যায়নি।")
+    print("\nℹ️ অবশিষ্টাংশে পাঠানোর মতো কোনো নতুন ডাটা নেই।")
